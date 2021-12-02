@@ -42,7 +42,7 @@ setup(
     license="Apache Software License 2.0",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
-    keywords=['aws', 'email']
+    keywords=['aws', 'email'],
     name='airmailer',
     packages=find_packages(include=['airmailer', 'airmailer.*']),
     test_suite='tests',
