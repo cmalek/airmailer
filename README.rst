@@ -36,9 +36,9 @@ Usage: SMTP
 
 .. code:: python
 
-    from airmailer.backend import SMTPMailBackend
+    from airmailer.backend import SMTPEMailBackend
 
-    backend = SMTPMailBackend(
+    backend = SMTPEMailBackend(
         'smtp.example.com',
         username='example',
         password='password'
@@ -75,7 +75,7 @@ Create an IAM Policy like so, and attach it to your EC2 instance profile, ECS ta
       ]
    }
 
-You can invoke the `SESMailBackend` either with explicit credentials or you can have it read credentials from the
+You can invoke the ``SESEMailBackend`` either with explicit credentials or you can have it read credentials from the
 environment.
 
 
@@ -84,9 +84,9 @@ Explicit credentials
 
 .. code:: python
 
-    from airmailer.backend import SESMailBackend
+    from airmailer.backend import SESEmailBackend
 
-    backend = SESMailBackend(
+    backend = SESEmailBackend(
         aws_access_key_id="__THE_ACCESS_KEY_ID__",
         aws_secret_access_key="__THE_SECRET_ACCESS_KEY__",
         aws_region_name="__THE_REGION_NAME__",
@@ -104,7 +104,7 @@ or
 
 .. code:: python
 
-    from airmailer.backend import SESMailBackend
+    from airmailer.backend import SESEmailBackend
     from botocore.config import Config
 
     my_config = Config(
@@ -113,7 +113,7 @@ or
         region_name="__THE_REGION_NAME__",
     )
 
-    backend = SESMailBackend(
+    backend = SESEmailBackend(
         aws_config=my_config,
         configuration_set_name='example'
     )
@@ -127,9 +127,9 @@ Then:
 
 .. code:: python
 
-    from airmailer.backend import SESMailBackend
+    from airmailer.backend import SESEmailBackend
 
-    backend = SESMailBackend(configuration_set_name='example')
+    backend = SESEmailBackend(configuration_set_name='example')
     num_sent = backend.send_mail(
         'Example Subject',
         'Here is my message',
