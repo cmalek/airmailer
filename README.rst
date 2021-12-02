@@ -36,9 +36,9 @@ Usage: SMTP
 
 .. code:: python
 
-    from airmailer.backend import SMTPEMailBackend
+    from airmailer.backend import SMTPEmailBackend
 
-    backend = SMTPEMailBackend(
+    backend = SMTPEmailBackend(
         'smtp.example.com',
         username='example',
         password='password'
@@ -75,7 +75,7 @@ Create an IAM Policy like so, and attach it to your EC2 instance profile, ECS ta
       ]
    }
 
-You can invoke the ``SESEMailBackend`` either with explicit credentials or you can have it read credentials from the
+You can invoke the ``SESEmailBackend`` either with explicit credentials or you can have it read credentials from the
 environment.
 
 
