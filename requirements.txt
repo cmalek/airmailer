@@ -1,0 +1,30 @@
+click>=8.0                                    # https://github.com/pallets/click
+# ---- Purposely unpinned ----
+boto3>=1.17                                   # https://github.com/boto/boto3
+
+# Packaging
+# ------------------------------------------------------------------------------
+bump2version==0.5.11                          # https://github.com/c4urself/bump2version
+twine                                         # https://github.com/pypa/twine/
+tox                                           # https://github.com/tox-dev/to
+wheel                                         # https://github.com/pypa/wheel
+Sphinx                                        # https://github.com/sphinx-doc/sphinx
+sphinx-autobuild                              # https://github.com/GaretJax/sphinx-autobuild
+sphinx-click                                  # https://github.com/click-contrib/sphinx-click
+sphinx_rtd_theme                              # https://github.com/readthedocs/sphinx_rtd_theme
+
+# Development
+# ------------------------------------------------------------------------------
+autopep8==0.8                                 # https://github.com/hhatto/autopep8
+flake8==3.7.5                                 # https://github.com/PyCQA/flake8
+pycodestyle==2.5.0                            # https://github.com/PyCQA/pycodestyle
+
+# Testing
+# ------------------------------------------------------------------------------
+testfixtures==6.10.0                          # https://github.com/Simplistix/testfixtures
+mock==3.0.5                                   # https://github.com/testing-cabal/mock
+nose==1.3.7                                   # https://github.com/nose-devs/nose
+
+# Other utils
+# ------------------------------------------------------------------------------
+ipython>=7.23.0                                # https://github.com/ipython/ipython
