@@ -61,6 +61,7 @@ def force_str(s, encoding='utf-8', errors='strict'):
         s = str(s, encoding, errors)
     else:
         s = str(s)
+    return s
 
 
 def forbid_multi_line_headers(name, val, encoding):
@@ -120,7 +121,7 @@ def sanitize_address(addr, encoding):
         localpart.encode('ascii')
     except UnicodeEncodeError:
         localpart = Header(localpart, encoding).encode()
-    domain = domain.encode('idna').encode('ascii')
+    domain = domain.encode('idna').decode('ascii')
 
     parsed_address = Address(username=localpart, domain=domain)
     return formataddr((nm, parsed_address.addr_spec))
@@ -199,7 +200,7 @@ class EmailMessage:
     """A container for email information."""
     content_subtype = 'plain'
     mixed_subtype = 'mixed'
-    encoding = None
+    encoding = 'utf-8'
 
     def __init__(self, subject='', body='', from_email=None, to=None, bcc=None,
                  attachments=None, headers=None, cc=None,
