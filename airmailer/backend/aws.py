@@ -73,6 +73,7 @@ class SESEmailBackend(BaseEmailBackend):
         self.ses_from_arn = ses_from_arn
         self.ses_return_path_arn = ses_return_path_arn
         self.configuration_set_name = configuration_set_name
+        self.connection = None
 
     def open(self):
         if self.connection:
@@ -180,7 +181,7 @@ class SESEmailBackend(BaseEmailBackend):
             if self.ses_return_path_arn:
                 kwargs['ReturnPathArn'] = self.ses_return_path_arn
 
-            response = self.conn.send_raw_email(**kwargs)
+            response = self.connection.send_raw_email(**kwargs)
         except ResponseError as err:
             # Store failure information so to post process it if required
             error_keys = ['status', 'reason', 'body', 'request_id',
@@ -207,11 +208,11 @@ class SESEmailBackend(BaseEmailBackend):
         email_message.extra_headers['message_id'] = response['MessageId']
         email_message.extra_headers['request_id'] = response['ResponseMetadata']['RequestId']
         logger.debug(
-            "airmailer.ses.send.success from='{}' recipients='{}' email_message_id='{}' request_id='{}' "
+            "airmailer.ses.send.success from='{}' recipients='{}' message_id='{}' request_id='{}' "
             "ses-configuration-set='{}'".format(
                 email_message.from_email,
                 ", ".join(email_message.recipients()),
-                email_message.extra_headers['email_message_id'],
+                email_message.extra_headers['message_id'],
                 email_message.extra_headers['request_id'],
                 self.configuration_set_name
             )
