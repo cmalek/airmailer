@@ -2,13 +2,15 @@
 # -*- coding: utf-8 -*-
 
 
+from typing import List, Dict, Any
 import boto3
 
+import botocore
 from botocore.vendored.requests.packages.urllib3.exceptions import ResponseError
 from botocore.exceptions import BotoCoreError, ClientError
 
 from ..logging import logger
-from ..message import sanitize_address
+from ..message import sanitize_address, EmailMessage
 from .base import BaseEmailBackend
 
 
@@ -19,63 +21,56 @@ class SESEmailBackend(BaseEmailBackend):
 
     def __init__(
         self,
-        fail_silently=False,
-        aws_access_key_id=None,
-        aws_secret_access_key=None,
-        aws_region_name=None,
-        configuration_set_name=None,
-        aws_region_endpoint=None,
+        fail_silently: bool = False,
+        aws_access_key_id: str = None,
+        aws_secret_access_key: str = None,
+        aws_region_name: str = None,
+        configuration_set_name: str = None,
+        aws_region_endpoint: str = None,
         aws_config=None,
-        ses_from_arn=None,
-        ses_source_arn=None,
-        ses_return_path_arn=None,
+        ses_from_arn: str = None,
+        ses_source_arn: str = None,
+        ses_return_path_arn: str = None,
+        ses_tags: Dict[str, str] = None,
         **kwargs
     ):
-        """Creates a client for the AWS SES API.
+        """
+        Creates a client for the AWS SES API.
 
-        :param fail_silently: If `True`, don't raise execeptions on client errors, defaults to False
-        :type fail_silently: bool
-
-        :param aws_access_key_id: the ``AWS_ACCESS_KEY_ID``, defaults to read from environment
-        :type aws_access_key_id: str, optional
-
-        :param aws_secret_access_key: the ``AWS_SECRET_ACCESS_KEY``, defaults to read from environment
-        :type aws_secret_access_key: str, optional
-
-        :param aws_region_name: the name of the AWS region to use, defaults to read from environment
-        :type aws_region_name: str, optional
-
-        :param configuration_set_name: the name of the SES Configuration Set to use, defaults to None
-        :type configuration_set_name: str, optional
-
-        :param aws_region_endpoint: the URL for the SES endpoint for the region, defaults to None
-        :type aws_region_endpoint: str, optional
-
-        :param aws_config: a properly constructed botocore Config object
-        :type aws_config: class:`botocore.config.Config`, optional
-
-        :param ses_from_arn: the FromArn when using cross-account identities, defaults to None
-        :type ses_from_arn: str, optional
-
-        :param ses_source_arn: the SourceArn when using cross-account identities, defaults to None
-        :type ses_source_arn: str, optional
-
-        :param ses_return_path_arn: the ReturnPathArn when using cross-account identities, defaults to None
-        :type ses_return_path_arn: str, optional
+        Keyword Arguments:
+            fail_silently: If ``True``, don't raise execeptions on client errors
+            aws_access_key_id: the ``AWS_ACCESS_KEY_ID``, defaults to read from environment
+            aws_secret_access_key: the ``AWS_SECRET_ACCESS_KEY``, defaults to read from environment
+            aws_region_name: the name of the AWS region to use, defaults to read from environment
+            configuration_set_name: the name of the SES Configuration Set to use
+            aws_region_endpoint: the URL for the SES endpoint for the region
+            aws_config: a properly constructed :py:class:`botocore.config.Config` object
+            ses_from_arn: the ``FromArn`` when using cross-account identities
+            ses_source_arn: the ``SourceArn`` when using cross-account identities
+            ses_return_path_arn: the ``ReturnPathArn`` when using cross-account identities
+            ses_tags: a dictionary of tags to apply set as ``X-SES-MESSAGE-TAGS`` on each
+                message sent
         """
         super().__init__(fail_silently=fail_silently)
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
         self.aws_region_name = aws_region_name
         self.aws_region_endpoint = aws_region_endpoint
-        self.aws_config = aws_config
+        self.aws_config: botocore.client.Config = aws_config
         self.ses_source_arn = ses_source_arn
         self.ses_from_arn = ses_from_arn
         self.ses_return_path_arn = ses_return_path_arn
         self.configuration_set_name = configuration_set_name
+        self.ses_tags = ses_tags
         self.connection = None
 
-    def open(self):
+    def open(self) -> bool:
+        """
+        Opens a connection to the AWS SES API.
+
+        Returns:
+            ``True`` if the connection was opened successfully, ``False`` otherwise.
+        """
         if self.connection:
             return False
 
@@ -91,24 +86,28 @@ class SESEmailBackend(BaseEmailBackend):
         except (ClientError, BotoCoreError):
             if not self.fail_silently:
                 raise
-            return None
+            return False
         return True
 
-    def close(self):
+    def close(self) -> None:
+        """
+        Close the connection to the AWS SES API.
+        """
         self.connection = None
 
-    def send_messages(self, email_messages):
+    def send_messages(self, email_messages: List[EmailMessage]) -> int:
         """
         Sends one or more messages returns the number of email messages sent.
 
-        :param email_messages: A list of emails to send
-        :type email_messages: List[airmailer.message.EmailMessage]
+        Args:
+            email_messages: A list of emails to send
 
-        :raises: class:`botocore.exceptions.ClientError`: AWS SES had an issue
-        :raises: class:`botocore.exceptions.BotoCoreError`: AWS SES had an issue
+        Raises:
+            botocore.exceptions.ClientError: AWS SES had an issue
+            botocore.exceptions.BotoCoreError: AWS SES had an issue
 
-        :return: count of messages sent
-        :rtype: int
+        Returns:
+            The number of messages sent
         """
         if not email_messages:
             return 0
@@ -128,35 +127,35 @@ class SESEmailBackend(BaseEmailBackend):
 
         return sent_message_count
 
-    def _send(self, email_message):
+    def _send(self, email_message: EmailMessage) -> bool:
         """
         Sends an individual message.
 
         If the message was submitted successfully to the AWS SES API, set
 
-        * `email_message.extra_headers['status']` to 200
-        * `email_message.extra_headers['message_id']` to the `MessageId`
-        * `email_message.extra_headers['request_id']` to the `RequestId` of the AWS API call response
+        * ``email_message.extra_headers['status']`` to 200
+        * ``email_message.extra_headers['message_id']`` to the ``MessageId``
+        * ``email_message.extra_headers['request_id']`` to the ``RequestId`` of the AWS API call response
 
         If the message was not submitted successfully to the AWS SES API, set
 
-        * `email_message.extra_headers['status']` to HTTP status of the response
-        * `email_message.extra_headers['reason']` to "Reason" given for the error in the response
-        * `email_message.extra_headers['error_code']` to error code of the response
-        * `email_message.extra_headers['error_message']` to error message from the response
-        * `email_message.extra_headers['body']` to body from the response
-        * `email_message.extra_headers['request_id']` to the `RequestId` of the AWS API call response
+        * ``email_message.extra_headers['status']`` to HTTP status of the response
+        * ``email_message.extra_headers['reason']`` to "Reason" given for the error in the response
+        * ``email_message.extra_headers['error_code']`` to error code of the response
+        * ``email_message.extra_headers['error_message']`` to error message from the response
+        * ``email_message.extra_headers['body']`` to body from the response
+        * ``email_message.extra_headers['request_id']`` to the ``RequestId`` of the AWS API call response
 
-        :param email_message: An email to send
-        :type email_message: class:`airmailer.message.EmailMessage`
+        Args:
+            email_message: An email to send
 
-        :raises: class:`botocore.exceptions.ClientError`: AWS SES had an issue
-        :raises: class:`botocore.exceptions.BotoCoreError`: AWS SES had an issue
+        Raises:
+            botocore.exceptions.ClientError: AWS SES had an issue
+            botocore.exceptions.BotoCoreError: AWS SES had an issue
 
-        :return: True if the message was sent, False otherwise
-        :rtype: bool
+        Returns:
+            ``True`` if the message was sent, ``False`` otherwise
         """
-
         if not email_message.recipients():
             return False
 
@@ -166,7 +165,7 @@ class SESEmailBackend(BaseEmailBackend):
         message = email_message.message()
 
         try:
-            kwargs = {
+            kwargs: Dict[str, Any] = {
                 "Source": from_email,
                 "Destinations": recipients,
                 "RawMessage": {"Data": message.as_bytes(linesep="\r\n")},
@@ -180,8 +179,12 @@ class SESEmailBackend(BaseEmailBackend):
                 kwargs['FromArn'] = self.ses_from_arn
             if self.ses_return_path_arn:
                 kwargs['ReturnPathArn'] = self.ses_return_path_arn
-
-            response = self.connection.send_raw_email(**kwargs)
+            if self.ses_tags is not None:
+                kwargs["Tags"] = [
+                    {"Name": key, "Value": value}
+                    for key, value in self.ses_tags.items()
+                ]
+            response = self.connection.send_raw_email(**kwargs)  # type: ignore
         except ResponseError as err:
             # Store failure information so to post process it if required
             error_keys = ['status', 'reason', 'body', 'request_id',
