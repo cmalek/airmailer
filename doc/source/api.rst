@@ -23,6 +23,6 @@ Backends
     :members:
     :undoc-members:
 
-.. automodule:: airmailer.backend.ses
+.. automodule:: airmailer.backend.aws
     :members:
     :undoc-members:
