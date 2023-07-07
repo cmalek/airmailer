@@ -2,4 +2,4 @@
 
 __author__ = """Christopher Malek"""
 __email__ = 'cmalek@caltech.edu'
-__version__ = '0.1.2'
+__version__ = '0.2.0'
