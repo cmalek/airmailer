@@ -70,13 +70,24 @@ class BaseEmailBackend:
         message,
         from_email: str,
         recipient_list: Iterable[str],
-        html_message: str = None
+        html_message: str = None,
+        bcc: Iterable[str] = None,
+        cc: Iterable[str] = None,
+        reply_to: Iterable[str] = None,
     ):
         """
         Easy wrapper for sending a single message to a recipient list. All members
         of the recipient list will see the other recipients in the 'To' field.
         """
-        mail = EmailMultiAlternatives(subject, message, from_email, recipient_list)
+        mail = EmailMultiAlternatives(
+            subject=subject,
+            body=message,
+            from_email=from_email,
+            to=recipient_list,
+            bcc=bcc,
+            cc=cc,
+            reply_to=reply_to,
+        )
         if html_message:
             mail.attach_alternative(html_message, 'text/html')
 
